@@ -1,0 +1,49 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: tech_blog
+      MYSQL_USER: blog
+      MYSQL_PASSWORD: blog_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ublog", "-pblog_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    environment:
+      APP_ADDR: ":8080"
+      MYSQL_DSN: "blog:blog_password@tcp(mysql:3306)/tech_blog?parseTime=true&charset=utf8mb4&loc=Local"
+      ADMIN_USERNAME: "admin"
+      ADMIN_PASSWORD: "change-me"
+      ADMIN_PHONE: "13800000000"
+      ADMIN_EMAIL: "admin@example.com"
+      UPLOAD_DIR: "/uploads"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/uploads
+    ports:
+      - "8080:8080"
+
+  nginx:
+    build:
+      context: ./frontend
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+
+volumes:
+  mysql_data:
+  uploads_data:

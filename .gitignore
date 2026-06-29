@@ -1,0 +1,11 @@
+.cache/
+.remote-tools/
+.repo-git/
+dist/
+node_modules/
+*.log
+
+frontend/dist/
+frontend/node_modules/
+backend/blog-api
+uploads/
